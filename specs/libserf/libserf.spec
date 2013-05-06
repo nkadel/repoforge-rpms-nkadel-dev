@@ -6,8 +6,8 @@
 
 Summary: HTTP client library written in C using apr
 Name: libserf
-Version: 0.3.0
-Release: 1%{?dist}
+Version: 1.1.1
+Release: 0.1%{?dist}
 License: Apache License 2.0
 Group: Development/Libraries
 URL: http://code.google.com/p/serf/
@@ -55,18 +55,22 @@ you will need to install %{name}-devel.
 %files
 %defattr(-, root, root, 0755)
 %doc README
-%{_libdir}/libserf-0.so.*
+%{_libdir}/libserf-1.so.*
+%{_libdir}/pkgconfig/serf-1.pc
 
 %files devel
 %defattr(-, root, root, 0755)
-%{_includedir}/serf.h
-%{_includedir}/serf_bucket_types.h
-%{_includedir}/serf_bucket_util.h
-%{_includedir}/serf_declare.h
-%{_libdir}/libserf-0.so
-%exclude %{_libdir}/libserf-0.a
-%exclude %{_libdir}/libserf-0.la
+%{_includedir}/*.h
+%{_libdir}/libserf-1.so
+%exclude %{_libdir}/libserf-1.a
+%exclude %{_libdir}/libserf-1.la
 
 %changelog
+* Sun Feb 17 2013 Nico Kadel-Garcia <nkadel@gmail.com> - 1.1.1-0.1
+- Update to 1.1.1.
+
+* Mon Sep 12 2011 Nico Kadel-Garcia <nkadel@gmail.com> - 1.0.0-0.1
+- Update to 1.0.0.
+
 * Fri May 08 2009 Christoph Maser <cmr@financial.com> - 0.3.0-1
 - Initial package.
