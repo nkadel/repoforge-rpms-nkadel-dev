@@ -1,76 +1,100 @@
-# $Id$
-# Authority: cmr
-# Upstream: <serf-dev@googlegroups.com>
-
-%define real_name serf
-
-Summary: HTTP client library written in C using apr
-Name: libserf
-Version: 1.1.1
-Release: 0.1%{?dist}
-License: Apache License 2.0
-Group: Development/Libraries
-URL: http://code.google.com/p/serf/
-
-Source: http://serf.googlecode.com/files/serf-%{version}.tar.bz2
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-
-BuildRequires: apr-devel
-BuildRequires: apr-util-devel
-BuildRequires: openssl-devel
-Requires: apr
-Requires: apr-util
-Requires: openssl
+Name:           libserf
+Version:        1.3.7
+Release:        0.1%{?dist}
+Summary:        High-Performance Asynchronous HTTP Client Library
+License:        ASL 2.0
+URL:            http://code.google.com/p/serf/
+Source0:        http://serf.googlecode.com/svn/src_releases/serf-%{version}.tar.bz2
+BuildRequires:  apr-devel, apr-util-devel
+BuildRequires:  krb5-devel, openssl-devel, zlib-devel
+BuildRequires:  scons >= 2.3
+BuildRequires:  pkgconfig
 
 %description
-HTTP client library written in C using apr.
+The serf library is a C-based HTTP client library built upon the Apache 
+Portable Runtime (APR) library. It multiplexes connections, running the
+read/write communication asynchronously. Memory copies and transformations are
+kept to a minimum to provide high performance operation.
 
-%package devel
-Summary: Header files, libraries and development documentation for %{name}.
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
+%package        devel
+Summary:        Development files for %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       apr-devel%{?_isa}
 
-%description devel
-This package contains the header files, static libraries and development
-documentation for %{name}. If you like to develop programs using %{name},
-you will need to install %{name}-devel.
+%description    devel
+This package contains libraries and header files for
+developing applications that use %{name}.
 
 %prep
-%setup -n %{real_name}-%{version}
+%setup -qn serf-%{version}
+
+# Shared library versioning support in scons is worse than awful...
+# minimally, here fix the soname to match serf-1.2.x.  Minor version
+# handling should be fixed too; really requires better upstream support:
+# http://scons.tigris.org/issues/show_bug.cgi?id=2869
+sed -i '/SHLIBVERSION/s/MAJOR/0/' SConstruct
 
 %build
-%configure --disable-static
-%{__make} %{?_smp_mflags}
+scons \
+      CFLAGS="%{optflags}" \
+      PREFIX=%{_prefix} \
+      LIBDIR=%{_libdir} \
+      GSSAPI=%{_prefix} \
+      %{?_smp_mflags}
 
 %install
-%{__rm} -rf %{buildroot}
-%{__make} install DESTDIR="%{buildroot}"
+scons install --install-sandbox=%{buildroot}
+
+find %{buildroot} -name '*.*a' -delete -print
+
+%check
+scons %{?_smp_mflags} check || true
 
 %post -p /sbin/ldconfig
+
 %postun -p /sbin/ldconfig
 
-%clean
-%{__rm} -rf %{buildroot}
-
 %files
-%defattr(-, root, root, 0755)
-%doc README
-%{_libdir}/libserf-1.so.*
-%{_libdir}/pkgconfig/serf-1.pc
+%doc LICENSE NOTICE
+%{_libdir}/*.so.*
 
 %files devel
-%defattr(-, root, root, 0755)
-%{_includedir}/*.h
-%{_libdir}/libserf-1.so
-%exclude %{_libdir}/libserf-1.a
-%exclude %{_libdir}/libserf-1.la
+%doc CHANGES README design-guide.txt
+%{_includedir}/serf-1/
+%{_libdir}/*.so
+%{_libdir}/pkgconfig/serf*.pc
 
 %changelog
-* Sun Feb 17 2013 Nico Kadel-Garcia <nkadel@gmail.com> - 1.1.1-0.1
-- Update to 1.1.1.
+* Tue Aug 12 2014 Christopher Meng <rpm@cicku.me> - 1.3.7-1
+- Update to 1.3.7
 
-* Mon Sep 12 2011 Nico Kadel-Garcia <nkadel@gmail.com> - 1.0.0-0.1
-- Update to 1.0.0.
+* Tue Jun 17 2014 Christopher Meng <rpm@cicku.me> - 1.3.6-1
+- Update to 1.3.6
 
-* Fri May 08 2009 Christoph Maser <cmr@financial.com> - 0.3.0-1
-- Initial package.
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.3.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
+* Wed Apr 30 2014 Christopher Meng <rpm@cicku.me> - 1.3.5-1
+- Update to 1.3.5
+
+* Mon Feb 17 2014 Joe Orton <jorton@redhat.com> - 1.3.4-1
+- Update to 1.3.4
+
+* Tue Dec 10 2013 Joe Orton <jorton@redhat.com> - 1.3.3-1
+- Update to 1.3.3
+
+* Wed Nov  6 2013 Joe Orton <jorton@redhat.com> - 1.3.2-1
+- Update to 1.3.2
+- Require krb5-devel for libgssapi (#1027011)
+
+* Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.1-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
+* Mon Jun 17 2013 Christopher Meng <rpm@cicku.me> - 1.2.1-3
+- SPEC cleanup.
+
+* Thu Jun 13 2013 Christopher Meng <rpm@cicku.me> - 1.2.1-2
+- Fix the permission of the library.
+
+* Sun Jun 09 2013 Christopher Meng <rpm@cicku.me> - 1.2.1-1
+- Initial Package.
